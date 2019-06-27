@@ -534,7 +534,7 @@
 	#define fix16_pow(x, y)	(fix16_exp(fix16_mul(y, fix16_log(x))))
 	#define fix16_frexp(x, i) ((*i) = x >> 16)
 
-	#define lua_str2number(s,p)	(fix16_from_str(s, p))
+	#define lua_str2number(s,p)	(strtofix16(s, (p)))
 
 	#undef l_floor
 	#define l_floor(x)		(fix16_floor(x))
