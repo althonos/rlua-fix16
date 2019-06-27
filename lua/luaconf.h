@@ -422,6 +422,7 @@
 @@ over a floating number.
 @@ l_mathlim(x) corrects limit name 'x' to the proper float type
 ** by prefixing it with one of FLT/DBL/LDBL.
+@@ l_litint(x) creates a Lua number from an integer literal.
 @@ LUA_NUMBER_FRMLEN is the length modifier for writing floats.
 @@ LUA_NUMBER_FMT is the format for writing floats.
 @@ lua_number2str converts a float to a string.
@@ -466,6 +467,7 @@
 #define LUA_NUMBER_FMT		"%.7g"
 
 #define l_mathop(op)		op##f
+#define l_litint(x)			l_mathop(x##.0)
 
 #define lua_str2number(s,p)	strtof((s), (p))
 
@@ -482,6 +484,7 @@
 #define LUA_NUMBER_FMT		"%.19Lg"
 
 #define l_mathop(op)		op##l
+#define l_litint(x)			l_mathop(x##.0)
 
 #define lua_str2number(s,p)	strtold((s), (p))
 
@@ -497,8 +500,31 @@
 #define LUA_NUMBER_FMT		"%.14g"
 
 #define l_mathop(op)		op
+#define l_litint(x)			l_mathop(x##.0)
 
 #define lua_str2number(s,p)	strtod((s), (p))
+
+#elif LUA_FLOAT_TYPE == LUA_FLOAT_FIX16 /* }{ double */
+
+	#include <fix16.h>
+
+	#undef lua_numbertointeger
+
+	#define LUA_NUMBER	fix16_t
+	//
+	// #define l_mathlim(n)		(DBL_##n)
+	//
+	#define LUAI_UACNUMBER	fix16_t
+	//
+	#define LUA_NUMBER_FRMLEN	""
+	#define LUA_NUMBER_FMT		"%-4x.%-4x"
+	//
+	#define l_mathop(op)		fix16_##op
+	#define l_litint(x)			fix16_from_int(x)
+	#define fix16_fabs 			fix16_abs
+	#define fix16_fmod 			fix16_mod
+	//
+	// #define lua_str2number(s,p)	strtod((s), (p))
 
 #else						/* }{ */
 
