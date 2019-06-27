@@ -69,7 +69,7 @@ size_t fix16_to_str(fix16_t value, char *buf, int decimals)
     }
 
     *buf = '\0';
-    return start - (size_t) buf;
+    return (size_t) buf - start;
 }
 
 fix16_t fix16_from_str(const char *buf, char** endptr)
