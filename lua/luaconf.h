@@ -109,7 +109,6 @@
 #define LUA_INT_INT		1
 #define LUA_INT_LONG		2
 #define LUA_INT_LONGLONG	3
-#define LUA_INT_SHORT   4
 
 /* predefined options for LUA_FLOAT_TYPE */
 #define LUA_FLOAT_FLOAT		1
@@ -509,22 +508,34 @@
 	#include <fix16.h>
 
 	#undef lua_numbertointeger
+	#define lua_numbertointeger(n, p) (*(p) = (LUA_INTEGER) fix16_to_int(n))
+
+	#undef lua_number2str
+	#define lua_number2str(s,sz,n) (fix16_to_str(n, (s), 1))
+		// l_sprintf((s), sz, LUA_NUMBER_FMT, (LUAI_UACNUMBER)(n))
 
 	#define LUA_NUMBER	fix16_t
 	//
-	// #define l_mathlim(n)		(DBL_##n)
+	#define l_mathlim(n)		(FIX16_##n)
+	//
+	#define FIX16_MAX_10_EXP 5
+	#define FIX16_MANT_DIG 16
 	//
 	#define LUAI_UACNUMBER	fix16_t
 	//
 	#define LUA_NUMBER_FRMLEN	""
-	#define LUA_NUMBER_FMT		"%-4x.%-4x"
+	#define LUA_NUMBER_FMT		"%i.%i"
 	//
 	#define l_mathop(op)		fix16_##op
 	#define l_litint(x)			fix16_from_int(x)
 	#define fix16_fabs 			fix16_abs
 	#define fix16_fmod 			fix16_mod
-	//
-	// #define lua_str2number(s,p)	strtod((s), (p))
+	#define fix16_log10(x)  (fix16_div(fix16_log(x), fix16_log(10)))
+	#define fix16_pow(x, y)	(fix16_exp(fix16_mul(y, fix16_log(x))))
+	#define fix16_frexp(x, i) ((*i) = x >> 16)
+
+	#define lua_str2number(s,p)	(fix16_from_str(s, p))
+	#define l_floor(x)		(fix16_floor(x))
 
 #else						/* }{ */
 
@@ -611,13 +622,6 @@
 
 #endif				/* } */
 
-#elif LUA_INT_TYPE == LUA_INT_SHORT /* }{ short */
-
-#define LUA_INTEGER		short
-#define LUA_INTEGER_FRMLEN	""
-
-#define LUA_MAXINTEGER		SHRT_MAX
-#define LUA_MININTEGER		SHRT_MIN
 
 #else				/* }{ */
 

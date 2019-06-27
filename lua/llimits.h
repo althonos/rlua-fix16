@@ -269,7 +269,11 @@ typedef unsigned long Instruction;
 
 /* float division */
 #if !defined(luai_numdiv)
+#if LUA_FLOAT_TYPE == LUA_FLOAT_FIX16
+#define luai_numdiv(L,a,b)      (fix16_div(a, b))
+#else
 #define luai_numdiv(L,a,b)      ((a)/(b))
+#endif
 #endif
 
 /*
@@ -291,6 +295,16 @@ typedef unsigned long Instruction;
 
 /* the others are quite standard operations */
 #if !defined(luai_numadd)
+#if LUA_FLOAT_TYPE == LUA_FLOAT_FIX16
+#define luai_numadd(L,a,b)      (fix16_add(a, b))
+#define luai_numsub(L,a,b)      (fix16_sub(a, b))
+#define luai_nummul(L,a,b)      (fix16_mul(a, b))
+#define luai_numunm(L,a)        (-(a))
+#define luai_numeq(a,b)         ((a)==(b))
+#define luai_numlt(a,b)         ((a)<(b))
+#define luai_numle(a,b)         ((a)<=(b))
+#define luai_numisnan(a)        (!luai_numeq((a), (a)))
+#else
 #define luai_numadd(L,a,b)      ((a)+(b))
 #define luai_numsub(L,a,b)      ((a)-(b))
 #define luai_nummul(L,a,b)      ((a)*(b))
@@ -299,6 +313,7 @@ typedef unsigned long Instruction;
 #define luai_numlt(a,b)         ((a)<(b))
 #define luai_numle(a,b)         ((a)<=(b))
 #define luai_numisnan(a)        (!luai_numeq((a), (a)))
+#endif
 #endif
 
 
