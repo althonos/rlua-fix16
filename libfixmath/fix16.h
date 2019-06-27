@@ -22,6 +22,7 @@ extern "C"
 #endif
 
 #include <stdint.h>
+#include <stdlib.h>
 
 typedef int32_t fix16_t;
 
@@ -45,6 +46,12 @@ static const fix16_t fix16_one = 0x00010000; /*!< fix16_t value of 1 */
 static inline fix16_t fix16_from_int(int a)     { return a * fix16_one; }
 static inline float   fix16_to_float(fix16_t a) { return (float)a / fix16_one; }
 static inline double  fix16_to_dbl(fix16_t a)   { return (double)a / fix16_one; }
+
+static inline fix16_t fix16_frexp(fix16_t a, int *i)
+{
+  *i = a >> 16;
+  return a & 0x0000FFFFUL;
+}
 
 static inline int fix16_to_int(fix16_t a)
 {
@@ -217,16 +224,16 @@ extern fix16_t fix16_log2(fix16_t x) FIXMATH_FUNC_ATTRS;
  */
 extern fix16_t fix16_slog2(fix16_t x) FIXMATH_FUNC_ATTRS;
 
-/*! Convert fix16_t value to a string.
+/*! Convert fix16_t value to a string and returns the number of chars written.
  * Required buffer length for largest values is 13 bytes.
  */
-extern void fix16_to_str(fix16_t value, char *buf, int decimals);
+extern size_t fix16_to_str(fix16_t value, char *buf, int decimals);
 
 /*! Convert string to a fix16_t value
  * Ignores spaces at beginning and end. Returns fix16_overflow if
  * value is too large or there were garbage characters.
  */
-extern fix16_t fix16_from_str(const char *buf);
+extern fix16_t fix16_from_str(const char *buf, char **endptr);
 
 /** Helper macro for F16C. Replace token with its number of characters/digits. */
 #define FIXMATH_TOKLEN(token) ( sizeof( #token ) - 1 )
