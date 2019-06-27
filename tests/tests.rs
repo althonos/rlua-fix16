@@ -437,28 +437,34 @@ fn test_num_conversion() {
 
         assert_eq!(lua.load("1.0").eval::<i64>().unwrap(), 1);
         assert_eq!(lua.load("1.0").eval::<f64>().unwrap(), 1.0);
-        // assert_eq!(lua.load("1.0").eval::<String>().unwrap(), "1.0");
+        assert_eq!(lua.load("1.0").eval::<String>().unwrap(), "1.0");
 
         assert_eq!(lua.load("1.5").eval::<i64>().unwrap(), 1);
         assert_eq!(lua.load("1.5").eval::<f64>().unwrap(), 1.5);
-        // assert_eq!(lua.load("1.5").eval::<String>().unwrap(), "1.5");
+        assert_eq!(lua.load("1.5").eval::<String>().unwrap(), "1.5");
 
         assert!(lua.load("-1").eval::<u64>().is_err());
         assert_eq!(lua.load("-1").eval::<i64>().unwrap(), -1);
 
-        // assert!(lua.unpack::<u64>(lua.pack(1u128 << 64).unwrap()).is_err());
-        // assert!(lua.load("math.huge").eval::<i64>().is_err());
+        #[cfg(not(feature = "pico"))]
+        assert!(lua.unpack::<u64>(lua.pack(1u128 << 64).unwrap()).is_err());
+        #[cfg(not(feature = "pico"))]
+        assert!(lua.load("math.huge").eval::<i64>().is_err());
 
-        // assert_eq!(
-            // lua.unpack::<f64>(lua.pack(f32::MAX).unwrap()).unwrap(),
-            // f32::MAX as f64
-        // );
-        // assert!(lua.unpack::<f32>(lua.pack(f64::MAX).unwrap()).is_err());
+        #[cfg(not(feature = "pico"))]
+        assert_eq!(
+            lua.unpack::<f64>(lua.pack(f32::MAX).unwrap()).unwrap(),
+            f32::MAX as f64
+        );
 
-        // assert_eq!(
-            // lua.unpack::<i128>(lua.pack(1i128 << 64).unwrap()).unwrap(),
-            // 1i128 << 64
-        // );
+        #[cfg(not(feature = "pico"))]
+        assert!(lua.unpack::<f32>(lua.pack(f64::MAX).unwrap()).is_err());
+
+        #[cfg(not(feature = "pico"))]
+        assert_eq!(
+            lua.unpack::<i128>(lua.pack(1i128 << 64).unwrap()).unwrap(),
+            1i128 << 64
+        );
     });
 }
 
