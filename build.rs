@@ -26,6 +26,20 @@ fn main() {
             config.define("LUA_USE_APICHECK", None);
         }
 
+        #[cfg(feature = "pico")]
+        {
+            config
+                .define("LUA_INT_TYPE", Some("LUA_INT_SHORT"))
+                .define("LUA_FLOAT_TYPE", Some("LUA_FLOAT_FIX16"));
+            config
+                .include("libfixmath/libfixmath")
+                .file("libfixmath/libfixmath/fix16_exp.c")
+                .file("libfixmath/libfixmath/fix16_sqrt.c")
+                .file("libfixmath/libfixmath/fix16_str.c")
+                .file("libfixmath/libfixmath/fix16_trig.c")
+                .file("libfixmath/libfixmath/fix16.c");
+        }
+
         config
             .include("lua")
             .file("lua/lapi.c")
