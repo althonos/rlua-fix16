@@ -109,11 +109,13 @@
 #define LUA_INT_INT		1
 #define LUA_INT_LONG		2
 #define LUA_INT_LONGLONG	3
+#define LUA_INT_SHORT   4
 
 /* predefined options for LUA_FLOAT_TYPE */
 #define LUA_FLOAT_FLOAT		1
 #define LUA_FLOAT_DOUBLE	2
 #define LUA_FLOAT_LONGDOUBLE	3
+#define LUA_FLOAT_FIX16   4
 
 #if defined(LUA_32BITS)		/* { */
 /*
@@ -583,6 +585,14 @@
 
 #endif				/* } */
 
+#elif LUA_INT_TYPE == LUA_INT_SHORT /* }{ short */
+
+#define LUA_INTEGER		short
+#define LUA_INTEGER_FRMLEN	""
+
+#define LUA_MAXINTEGER		SHRT_MAX
+#define LUA_MININTEGER		SHRT_MIN
+
 #else				/* }{ */
 
 #error "numeric integer type not defined"
@@ -787,4 +797,3 @@
 
 
 #endif
-
