@@ -112,10 +112,13 @@ typedef LUAI_UACINT l_uacInt;
 
 #define cast_void(i)	cast(void, (i))
 #define cast_byte(i)	cast(lu_byte, (i))
-#define cast_num(i)	cast(lua_Number, (i))
-#define cast_int(i)	cast(int, (i))
+#define cast_int(i)	  cast(int, (i))
 #define cast_uchar(i)	cast(unsigned char, (i))
-
+#if LUA_FLOAT_TYPE == LUA_FLOAT_FIX16
+#define cast_num(i)	  fix16_from_int(cast(int, (i)))
+#else
+#define cast_num(i)	  cast(lua_Number, (i))
+#endif
 
 /* cast a signed lua_Integer to lua_Unsigned */
 #if !defined(l_castS2U)
