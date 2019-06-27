@@ -1,4 +1,5 @@
 #include "fix16.h"
+#include <errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #ifndef FIXMATH_NO_CTYPE
@@ -7,6 +8,11 @@
 static inline int isdigit(int c)
 {
     return c >= '0' && c <= '9';
+}
+
+static inline int isxdigit(int c)
+{
+    return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')
 }
 
 static inline int isspace(int c)
@@ -72,7 +78,7 @@ size_t fix16_to_str(fix16_t value, char *buf, int decimals)
     return (size_t) buf - start;
 }
 
-fix16_t fix16_from_str(const char *buf, char** endptr)
+fix16_t fix16_from_str(const char *buf)
 {
     while (isspace(*buf))
         buf++;
@@ -124,6 +130,103 @@ fix16_t fix16_from_str(const char *buf, char** endptr)
         buf++;
     }
 
-    *endptr = (char*) buf;
+    return negative ? -value : value;
+}
+
+fix16_t strtofix16(const char *nptr, char** endptr)
+{
+    while (isspace(*nptr))
+        nptr++;
+
+    /* Decode the sign */
+    bool negative = (*nptr == '-');
+    if (*nptr == '+' || *nptr == '-')
+        nptr++;
+
+    /* Decode the number */
+    fix16_t value;
+    uint32_t intpart = 0;
+    uint32_t fracpart = 0;
+    uint32_t scale = 1;
+    int count = 0;
+
+    /* Decode hexadecimal */
+    if ((nptr[0] == '0') && (( nptr[1] == 'x') || ( nptr[1] == 'X' ) ))
+    {
+        nptr++;
+        nptr++;
+
+        /* Decode the integer part */
+        while (isxdigit(*nptr))
+        {
+            intpart <<= 4;
+            char c = *nptr++;
+            intpart += (c > '9')? (c &~ 0x20) - 'A' + 10: (c - '0');;
+            count++;
+        }
+
+        /* Check for overflow (nb: count == 0 is OK)*/
+        if (count > 4 || intpart > 32768 || (!negative && intpart > 32767))
+        {
+            errno = ERANGE;
+            if (endptr) *endptr = (char*) nptr;
+            return negative ? -fix16_overflow : fix16_overflow;
+        }
+
+        value = intpart << 16;
+
+        /* Decode the decimal part */
+        if (*nptr == '.' || *nptr == ',')
+        {
+            nptr++;
+
+            while (isxdigit(*nptr) && scale < 0xFFFF)
+            {
+                scale *= 16;
+                fracpart *= 16;
+                char c = *nptr++;
+                fracpart += (c > '9')? (c &~ 0x20) - 'A' + 10: (c - '0');;
+            }
+
+            value += fix16_div(fracpart, scale);
+        }
+    }
+    else
+    {
+        /* Decode the integer part */
+        while (isdigit(*nptr))
+        {
+            intpart *= 10;
+            intpart += *nptr++ - '0';
+            count++;
+        }
+
+        /* Check for overflow */
+        if (count > 5 || intpart > 32768 || (!negative && intpart > 32767))
+        {
+            errno = ERANGE;
+            if (endptr) *endptr = (char*) nptr;
+            return negative ? -fix16_overflow : fix16_overflow;
+        }
+
+        value = intpart << 16;
+
+        /* Decode the decimal part */
+        if (*nptr == '.' || *nptr == ',')
+        {
+            nptr++;
+
+            while (isdigit(*nptr) && scale < 100000)
+            {
+                scale *= 10;
+                fracpart *= 10;
+                fracpart += *nptr++ - '0';
+            }
+
+            value += fix16_div(fracpart, scale);
+        }
+      }
+
+    if (endptr) *endptr = (char*) nptr;
     return negative ? -value : value;
 }

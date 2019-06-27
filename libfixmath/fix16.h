@@ -233,7 +233,12 @@ extern size_t fix16_to_str(fix16_t value, char *buf, int decimals);
  * Ignores spaces at beginning and end. Returns fix16_overflow if
  * value is too large or there were garbage characters.
  */
-extern fix16_t fix16_from_str(const char *buf, char **endptr);
+extern fix16_t fix16_from_str(const char *buf);
+
+/*! Convert string to a fix16_t value
+ * Uses the same semantics as the `strtod` family of functions.
+ */
+extern fix16_t strtofix16(const char *buf, char **endptr);
 
 /** Helper macro for F16C. Replace token with its number of characters/digits. */
 #define FIXMATH_TOKLEN(token) ( sizeof( #token ) - 1 )
