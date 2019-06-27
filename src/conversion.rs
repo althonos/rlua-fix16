@@ -286,6 +286,7 @@ impl<'lua, 'a> ToLua<'lua> for &BStr {
 
 macro_rules! lua_convert_int {
     ($x:ty) => {
+        #[cfg(not(feature = "pico"))]
         impl<'lua> ToLua<'lua> for $x {
             fn to_lua(self, _: Context<'lua>) -> Result<Value<'lua>> {
                 if let Some(i) = cast(self) {
@@ -302,6 +303,24 @@ macro_rules! lua_convert_int {
             }
         }
 
+        #[cfg(feature = "pico")]
+        impl<'lua> ToLua<'lua> for $x {
+            fn to_lua(self, _: Context<'lua>) -> Result<Value<'lua>> {
+                if let Some(i) = cast(self) {
+                    Ok(Value::Integer(i))
+                } else {
+                    Number::checked_from_int(self)
+                        .ok_or_else(|| Error::ToLuaConversionError {
+                            from: stringify!($x),
+                            to: "number",
+                            message: Some("out of range".to_owned()),
+                        })
+                        .map(Value::Number)
+                }
+            }
+        }
+
+        #[cfg(not(feature = "pico"))]
         impl<'lua> FromLua<'lua> for $x {
             fn from_lua(value: Value<'lua>, lua: Context<'lua>) -> Result<Self> {
                 let ty = value.type_name();
@@ -325,6 +344,31 @@ macro_rules! lua_convert_int {
                 })
             }
         }
+
+        #[cfg(feature = "pico")]
+        impl<'lua> FromLua<'lua> for $x {
+            fn from_lua(value: Value<'lua>, lua: Context<'lua>) -> Result<Self> {
+                let ty = value.type_name();
+                (if let Some(i) = lua.coerce_integer(value.clone())? {
+                    cast(i)
+                } else {
+                    lua.coerce_number(value)?.ok_or_else(|| {
+                        Error::FromLuaConversionError {
+                            from: ty,
+                            to: stringify!($x),
+                            message: Some(
+                                "expected number or string coercible to number".to_string(),
+                            ),
+                        }
+                    })?.checked_to_int()
+                })
+                .ok_or_else(|| Error::FromLuaConversionError {
+                    from: ty,
+                    to: stringify!($x),
+                    message: Some("out of range".to_owned()),
+                })
+            }
+        }
     };
 }
 
@@ -338,17 +382,129 @@ lua_convert_int!(i64);
 lua_convert_int!(u64);
 lua_convert_int!(i128);
 lua_convert_int!(u128);
-lua_convert_int!(isize);
-lua_convert_int!(usize);
+
+
+macro_rules! lua_convert_size {
+    ($x:ty as $y:ty) => {
+        #[cfg(not(feature = "pico"))]
+        impl<'lua> ToLua<'lua> for $x {
+            fn to_lua(self, _: Context<'lua>) -> Result<Value<'lua>> {
+                if let Some(i) = cast(self) {
+                    Ok(Value::Integer(i))
+                } else {
+                    cast(self)
+                        .ok_or_else(|| Error::ToLuaConversionError {
+                            from: stringify!($x),
+                            to: "number",
+                            message: Some("out of range".to_owned()),
+                        })
+                        .map(Value::Number)
+                }
+            }
+        }
+
+        #[cfg(feature = "pico")]
+        impl<'lua> ToLua<'lua> for $x {
+            fn to_lua(self, _: Context<'lua>) -> Result<Value<'lua>> {
+                if let Some(i) = cast(self) {
+                    Ok(Value::Integer(i))
+                } else {
+                    Number::checked_from_int(self as $y)
+                        .ok_or_else(|| Error::ToLuaConversionError {
+                            from: stringify!($x),
+                            to: "number",
+                            message: Some("out of range".to_owned()),
+                        })
+                        .map(Value::Number)
+                }
+            }
+        }
+
+        #[cfg(not(feature = "pico"))]
+        impl<'lua> FromLua<'lua> for $x {
+            fn from_lua(value: Value<'lua>, lua: Context<'lua>) -> Result<Self> {
+                let ty = value.type_name();
+                (if let Some(i) = lua.coerce_integer(value.clone())? {
+                    cast(i)
+                } else {
+                    cast(lua.coerce_number(value)?.ok_or_else(|| {
+                        Error::FromLuaConversionError {
+                            from: ty,
+                            to: stringify!($x),
+                            message: Some(
+                                "expected number or string coercible to number".to_string(),
+                            ),
+                        }
+                    })?)
+                })
+                .ok_or_else(|| Error::FromLuaConversionError {
+                    from: ty,
+                    to: stringify!($x),
+                    message: Some("out of range".to_owned()),
+                })
+            }
+        }
+
+        #[cfg(feature = "pico")]
+        impl<'lua> FromLua<'lua> for $x {
+            fn from_lua(value: Value<'lua>, lua: Context<'lua>) -> Result<Self> {
+                let ty = value.type_name();
+                (if let Some(i) = lua.coerce_integer(value.clone())? {
+                    cast(i)
+                } else {
+                    lua.coerce_number(value)?.ok_or_else(|| {
+                        Error::FromLuaConversionError {
+                            from: ty,
+                            to: stringify!($x),
+                            message: Some(
+                                "expected number or string coercible to number".to_string(),
+                            ),
+                        }
+                    })?.checked_to_int::<$y>().map(|x| x as $x)
+                })
+                .ok_or_else(|| Error::FromLuaConversionError {
+                    from: ty,
+                    to: stringify!($x),
+                    message: Some("out of range".to_owned()),
+                })
+            }
+        }
+    };
+}
+
+#[cfg(target_pointer_width = "32")]
+lua_convert_size!(isize as i32);
+#[cfg(target_pointer_width = "32")]
+lua_convert_size!(usize as u32);
+#[cfg(target_pointer_width = "64")]
+lua_convert_size!(isize as i64);
+#[cfg(target_pointer_width = "64")]
+lua_convert_size!(usize as u64);
 
 macro_rules! lua_convert_float {
     ($x:ty) => {
+
+        #[cfg(not(feature = "pico"))]
         impl<'lua> ToLua<'lua> for $x {
             fn to_lua(self, _: Context<'lua>) -> Result<Value<'lua>> {
                 Ok(Value::Number(self as Number))
             }
         }
 
+        #[cfg(feature = "pico")]
+        impl<'lua> ToLua<'lua> for $x {
+            fn to_lua(self, _: Context<'lua>) -> Result<Value<'lua>> {
+                Number::checked_from_float(self)
+                    .ok_or_else(|| Error::FromLuaConversionError {
+                        from: stringify!($x),
+                        to: "number",
+                        message: Some("number out of range".to_string()),
+                    })
+                    .map(Value::Number)
+            }
+        }
+
+        #[cfg(not(feature = "pico"))]
         impl<'lua> FromLua<'lua> for $x {
             fn from_lua(value: Value<'lua>, lua: Context<'lua>) -> Result<Self> {
                 let ty = value.type_name();
@@ -365,6 +521,20 @@ macro_rules! lua_convert_float {
                             message: Some("number out of range".to_string()),
                         })
                     })
+            }
+        }
+
+        #[cfg(feature = "pico")]
+        impl<'lua> FromLua<'lua> for $x {
+            fn from_lua(value: Value<'lua>, lua: Context<'lua>) -> Result<Self> {
+                let ty = value.type_name();
+                lua.coerce_number(value)?
+                    .ok_or_else(|| Error::FromLuaConversionError {
+                        from: ty,
+                        to: stringify!($x),
+                        message: Some("expected number or string coercible to number".to_string()),
+                    })
+                    .map(|n| n.to_float())
             }
         }
     };

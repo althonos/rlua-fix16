@@ -9,8 +9,12 @@ use crate::value::MultiValue;
 
 /// Type of Lua integer numbers.
 pub type Integer = ffi::lua_Integer;
+
 /// Type of Lua floating point numbers.
+#[cfg(not(feature = "pico"))]
 pub type Number = ffi::lua_Number;
+#[cfg(feature = "pico")]
+pub type Number = fixed::FixedI32<fixed::frac::U16>;
 
 /// A "light" userdata value. Equivalent to an unmanaged raw pointer.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

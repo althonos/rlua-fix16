@@ -6,6 +6,9 @@ use std::os::raw::{c_char, c_int, c_void};
 use std::sync::Arc;
 use std::{mem, ptr};
 
+#[cfg(feature = "pico")]
+use fixed::FixedI32;
+
 use crate::error::{Error, Result};
 use crate::ffi;
 use crate::function::Function;
@@ -338,7 +341,15 @@ impl<'lua> Context<'lua> {
                 if isnum == 0 {
                     None
                 } else {
-                    Some(n)
+                    #[cfg(not(feature = "pico"))]
+                    {
+                        Some(n)
+                    }
+
+                    #[cfg(feature = "pico")]
+                    {
+                        Some(FixedI32::from_bits(n))
+                    }
                 }
             },
         })
@@ -556,7 +567,14 @@ impl<'lua> Context<'lua> {
             }
 
             Value::Number(n) => {
-                ffi::lua_pushnumber(self.state, n);
+                #[cfg(feature = "pico")]
+                {
+                    ffi::lua_pushnumber(self.state, n.to_bits());
+                }
+                #[cfg(not(feature = "pico"))]
+                {
+                    ffi::lua_pushnumber(self.state, n);
+                }
             }
 
             Value::String(s) => {
@@ -613,7 +631,10 @@ impl<'lua> Context<'lua> {
                     ffi::lua_pop(self.state, 1);
                     i
                 } else {
+                    #[cfg(not(feature = "pico"))]
                     let n = Value::Number(ffi::lua_tonumber(self.state, -1));
+                    #[cfg(feature = "pico")]
+                    let n = Value::Number(FixedI32::from_bits(ffi::lua_tonumber(self.state, -1)));
                     ffi::lua_pop(self.state, 1);
                     n
                 }
@@ -950,7 +971,7 @@ impl<'lua, 'a> Chunk<'lua, 'a> {
 
     /// Load this chunk into a regular `Function`.
     ///
-    /// This simply compiles the chunk without actually executing it.  
+    /// This simply compiles the chunk without actually executing it.
     pub fn into_function(self) -> Result<Function<'lua>> {
         self.context
             .load_chunk(self.source, self.name.as_ref(), self.env)

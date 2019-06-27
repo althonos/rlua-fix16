@@ -7,7 +7,10 @@ use std::os::raw::{c_char, c_double, c_int, c_longlong, c_uchar, c_void};
 use std::ptr;
 
 pub type lua_Integer = c_longlong;
+#[cfg(not(feature = "pico"))]
 pub type lua_Number = c_double;
+#[cfg(feature = "pico")]
+pub type lua_Number = i32;
 
 pub enum lua_State {}
 pub type lua_Alloc = unsafe extern "C" fn(
