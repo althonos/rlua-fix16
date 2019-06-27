@@ -839,7 +839,7 @@ static lua_Number adddigit (char *buff, int n, lua_Number x) {
 
 #if LUA_FLOAT_TYPE == LUA_FLOAT_FIX16
 static int num2straux (char *buff, int sz, lua_Number x) {
-	l_sprintf(buff, sz, "%-4x.%-4x", x >> 16, x & 0xFFFF);
+	return fix16_to_str(x, buff, 1);
 }
 #else
 static int num2straux (char *buff, int sz, lua_Number x) {
