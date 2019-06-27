@@ -535,6 +535,8 @@
 	#define fix16_frexp(x, i) ((*i) = x >> 16)
 
 	#define lua_str2number(s,p)	(fix16_from_str(s, p))
+
+	#undef l_floor
 	#define l_floor(x)		(fix16_floor(x))
 
 #else						/* }{ */
