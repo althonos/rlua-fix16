@@ -65,14 +65,14 @@ fn test_table() {
                 .pairs()
                 .collect::<Result<Vec<(i64, i64)>>>()
                 .unwrap(),
-            vec![]
+            vec![],
         );
         assert_eq!(
             table2
                 .sequence_values()
                 .collect::<Result<Vec<i64>>>()
                 .unwrap(),
-            vec![]
+            Vec::<i64>::new(),
         );
 
         // sequence_values should only iterate until the first border
