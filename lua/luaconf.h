@@ -527,7 +527,7 @@
 	#define LUA_NUMBER_FMT		"%i.%i"
 	//
 	#define l_mathop(op)		fix16_##op
-	#define l_litint(x)			fix16_from_int(x)
+	#define l_litint(x)			(F16(x))
 	#define fix16_fabs 			fix16_abs
 	#define fix16_fmod 			fix16_mod
 	#define fix16_log10(x)  (fix16_div(fix16_log(x), fix16_log(10)))
