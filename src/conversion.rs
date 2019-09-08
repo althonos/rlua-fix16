@@ -309,7 +309,7 @@ macro_rules! lua_convert_int {
                 if let Some(i) = cast(self) {
                     Ok(Value::Integer(i))
                 } else {
-                    Number::checked_from_int(self)
+                    Number::checked_from_num(self)
                         .ok_or_else(|| Error::ToLuaConversionError {
                             from: stringify!($x),
                             to: "number",
@@ -360,7 +360,7 @@ macro_rules! lua_convert_int {
                                 "expected number or string coercible to number".to_string(),
                             ),
                         }
-                    })?.checked_to_int()
+                    })?.checked_to_num()
                 })
                 .ok_or_else(|| Error::FromLuaConversionError {
                     from: ty,
