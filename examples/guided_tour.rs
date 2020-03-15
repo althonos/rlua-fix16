@@ -1,7 +1,7 @@
 use std::f32;
 use std::iter::FromIterator;
 
-use rlua::{Function, Lua, MetaMethod, Result, UserData, UserDataMethods, Variadic};
+use rlua::{Function, Lua, MetaMethod, Number, Result, UserData, UserDataMethods, Variadic};
 
 fn main() -> Result<()> {
     // You can create a new Lua state with `Lua::new()`.  This loads the default Lua std library
@@ -168,13 +168,13 @@ fn main() -> Result<()> {
         // together
 
         #[derive(Copy, Clone)]
-        struct Vec2(f32, f32);
+        struct Vec2(Number, Number);
 
         impl UserData for Vec2 {
             fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
-                methods.add_method("magnitude", |_, vec, ()| {
+                methods.add_method("magnitude2", |_, vec, ()| {
                     let mag_squared = vec.0 * vec.0 + vec.1 * vec.1;
-                    Ok(mag_squared.sqrt())
+                    Ok(mag_squared)
                 });
 
                 methods.add_meta_function(MetaMethod::Add, |_, (vec1, vec2): (Vec2, Vec2)| {
@@ -183,14 +183,14 @@ fn main() -> Result<()> {
             }
         }
 
-        let vec2_constructor = lua_ctx.create_function(|_, (x, y): (f32, f32)| Ok(Vec2(x, y)))?;
+        let vec2_constructor = lua_ctx.create_function(|_, (x, y): (Number, Number)| Ok(Vec2(x, y)))?;
         globals.set("vec2", vec2_constructor)?;
 
         assert!(
             (lua_ctx
                 .load("(vec2(1, 2) + vec2(2, 2)):magnitude()")
-                .eval::<f32>()?
-                - 5.0)
+                .eval::<Number>()?
+                - Number::from_num(5))
                 .abs()
                 < f32::EPSILON
         );

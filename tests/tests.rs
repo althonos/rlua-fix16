@@ -6,7 +6,7 @@ use std::{error, f32, f64, fmt};
 #[cfg(feature = "pico")]
 use fixed::FixedI32;
 use rlua::{
-    Error, ExternalError, Function, Lua, Nil, Result, StdLib, String, Table, UserData, Value,
+    Error, ExternalError, Function, Lua, Nil, Number, Result, StdLib, String, Table, UserData, Value,
     Variadic,
 };
 
@@ -436,11 +436,11 @@ fn test_num_conversion() {
         );
 
         assert_eq!(lua.load("1.0").eval::<i64>().unwrap(), 1);
-        assert_eq!(lua.load("1.0").eval::<f64>().unwrap(), 1.0);
+        assert_eq!(lua.load("1.0").eval::<Number>().unwrap(), 1.0);
         assert_eq!(lua.load("1.0").eval::<String>().unwrap(), "1.0");
 
         assert_eq!(lua.load("1.5").eval::<i64>().unwrap(), 1);
-        assert_eq!(lua.load("1.5").eval::<f64>().unwrap(), 1.5);
+        assert_eq!(lua.load("1.5").eval::<Number>().unwrap(), 1.5);
         assert_eq!(lua.load("1.5").eval::<String>().unwrap(), "1.5");
 
         assert!(lua.load("-1").eval::<u64>().is_err());
