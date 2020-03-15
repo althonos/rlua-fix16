@@ -32,12 +32,13 @@ fn main() {
                 .define("LUA_FLOAT_TYPE", Some("LUA_FLOAT_FIX16"));
             config
                 .define("FIXMATH_NO_OVERFLOW", None)
-                .include("libfixmath")
-                .file("libfixmath/fix16.c")
-                .file("libfixmath/fix16_exp.c")
-                .file("libfixmath/fix16_sqrt.c")
-                .file("libfixmath/fix16_str.c")
-                .file("libfixmath/fix16_trig.c");
+                .include("lua/libfixmath/libfixmath")
+                .file("lua/compat/strtofix16.c")
+                .file("lua/libfixmath/libfixmath/fix16.c")
+                .file("lua/libfixmath/libfixmath/fix16_exp.c")
+                .file("lua/libfixmath/libfixmath/fix16_sqrt.c")
+                .file("lua/libfixmath/libfixmath/fix16_str.c")
+                .file("lua/libfixmath/libfixmath/fix16_trig.c");
         }
 
         config
